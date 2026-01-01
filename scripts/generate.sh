@@ -29,8 +29,21 @@ else
     exit 1
 fi
 
-echo "[3] Building Node (with Injected Key)..."
+# Generate Swarm Key (32 bytes hex)
+SWARM_KEY_PATH="$KEY_DIR/swarm.key"
+if [ ! -f "$SWARM_KEY_PATH" ]; then
+    openssl rand -hex 32 > "$SWARM_KEY_PATH"
+    echo "[+] Generated Swarm Key"
+fi
+SWARM_KEY=$(cat "$SWARM_KEY_PATH")
+
+# Define Bootstrap Address (Placeholder for now, in prod this comes from config)
+BOOTSTRAP_ONION="boot_mock_v3_placeholder_for_compiler_verification.onion:80"
+
+echo "[3] Building Node (with Injected Keys)..."
 export MASTER_PUB_KEY="$PUB_KEY"
+export SWARM_KEY="$SWARM_KEY"
+export BOOTSTRAP_ONION="$BOOTSTRAP_ONION"
 cargo build --release --bin node -p node
 
 echo "[OK] Build Complete."
