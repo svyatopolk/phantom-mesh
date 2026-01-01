@@ -1,1 +1,0 @@
-{"rustc":18415816196306954164,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[1567986004986577636,"build_script_build",false,15011386932618748332]],"local":[{"RerunIfChanged":{"output":"debug/build/automine-cf4833f57a91c038/output","paths":["../proto/c2.proto","../proto"]}}],"rustflags":[],"config":0,"compile_kind":0}
