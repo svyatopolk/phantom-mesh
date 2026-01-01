@@ -3,6 +3,7 @@ use rand::rngs::OsRng;
 use std::fs;
 use std::path::PathBuf;
 use protocol::{CommandPayload, GhostPacket};
+use uuid;
 
 pub fn generate_key(output: &PathBuf) -> String {
     let mut csprng = OsRng;
@@ -10,7 +11,12 @@ pub fn generate_key(output: &PathBuf) -> String {
     let verifying_key = VerifyingKey::from(&signing_key);
     
     fs::write(output, signing_key.to_bytes()).expect("Failed to write key");
-    hex::encode(verifying_key.to_bytes())
+    
+    let pub_hex = hex::encode(verifying_key.to_bytes());
+    let pub_path = output.with_extension("pub");
+    fs::write(pub_path, &pub_hex).expect("Failed to write public key");
+    
+    pub_hex
 }
 
 pub fn load_key(path: &PathBuf) -> SigningKey {
@@ -19,22 +25,16 @@ pub fn load_key(path: &PathBuf) -> SigningKey {
     SigningKey::from_bytes(&arr)
 }
 
-pub fn sign_packet(key: &SigningKey, action: String) -> GhostPacket {
-    let ts = std::time::SystemTime::now()
+pub fn create_payload(action: String) -> CommandPayload {
+    // Default ExecuteAt = Now + 60s
+    let execute_at = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
-        .as_secs() as i64;
+        .as_secs() as i64 + 60;
         
-    let payload = CommandPayload {
+    CommandPayload {
+        id: uuid::Uuid::new_v4().to_string(),
         action,
-        nonce: rand::random::<u64>(),
-        timestamp: ts,
-    };
-    
-    // Use Protocol's E2EE Constructor
-    GhostPacket::new(&payload, |data| {
-        use ed25519_dalek::Signer;
-        let signature = key.sign(data);
-        hex::encode(signature.to_bytes())
-    })
+        execute_at,
+    }
 }

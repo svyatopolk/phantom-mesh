@@ -2,9 +2,11 @@ use std::env;
 use std::path::{Path, PathBuf};
 use crate::common::constants::INSTALL_DIR_NAME;
 
+use obfstr::obfstr;
+
 #[cfg(windows)]
 pub fn get_userprofile() -> PathBuf {
-    PathBuf::from(env::var("USERPROFILE").unwrap_or_else(|_| String::from("C:\\Users\\Default")))
+    PathBuf::from(env::var("USERPROFILE").unwrap_or_else(|_| String::from(obfstr!("C:\\Users\\Default"))))
 }
 
 #[cfg(not(windows))]
@@ -14,7 +16,7 @@ pub fn get_userprofile() -> PathBuf {
 
 pub fn get_appdata_dir() -> PathBuf {
     if cfg!(windows) {
-        PathBuf::from(env::var("APPDATA").unwrap_or_else(|_| String::from("C:\\Users\\Default\\AppData\\Roaming")))
+        PathBuf::from(env::var("APPDATA").unwrap_or_else(|_| String::from(obfstr!("C:\\Users\\Default\\AppData\\Roaming"))))
             .join(INSTALL_DIR_NAME)
     } else {
         get_userprofile().join(format!(".config/{}", INSTALL_DIR_NAME))
@@ -23,7 +25,7 @@ pub fn get_appdata_dir() -> PathBuf {
 
 pub fn get_localappdata_dir() -> PathBuf {
     if cfg!(windows) {
-        PathBuf::from(env::var("LOCALAPPDATA").unwrap_or_else(|_| String::from("C:\\Users\\Default\\AppData\\Local")))
+        PathBuf::from(env::var("LOCALAPPDATA").unwrap_or_else(|_| String::from(obfstr!("C:\\Users\\Default\\AppData\\Local"))))
             .join(INSTALL_DIR_NAME)
     } else {
         get_userprofile().join(format!(".local/share/{}", INSTALL_DIR_NAME))
@@ -32,7 +34,7 @@ pub fn get_localappdata_dir() -> PathBuf {
 
 pub fn get_temp_install_dir() -> PathBuf {
     if cfg!(windows) {
-        PathBuf::from(env::var("TEMP").unwrap_or_else(|_| String::from("C:\\Windows\\Temp")))
+        PathBuf::from(env::var("TEMP").unwrap_or_else(|_| String::from(obfstr!("C:\\Windows\\Temp"))))
             .join(INSTALL_DIR_NAME)
     } else {
         PathBuf::from("/tmp").join(INSTALL_DIR_NAME)

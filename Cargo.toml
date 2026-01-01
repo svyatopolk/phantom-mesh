@@ -1,8 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/bot",
-    "crates/relay",
-    "crates/master",
+    "crates/node",
+    "crates/bootstrap",
+    "crates/ghost",
     "crates/protocol"
 ]
+
+[profile.release]
+strip = true       # Strip symbols
+lto = true         # Link Time Optimization (Cross-Crate Inlining)
+codegen-units = 1  # Standardize codegen for max optimization
+panic = "abort"    # Remove unwind strings/overhead
+opt-level = "z"    # Optimize for Size (often harder to analyze than '3')

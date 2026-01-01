@@ -1,5 +1,5 @@
 [package]
-name = "bot"
+name = "node"
 version = "0.2.0"
 edition = "2021"
 
@@ -10,7 +10,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 num_cpus = "1.16"
 clap = { version = "4.4", features = ["derive"] }
-rand = "0.8"
+rand = "0.8.5"
 hostname = "0.4.2"
 tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
 futures-util = "0.3"
@@ -27,6 +27,10 @@ sysinfo = "0.37.2"
 once_cell = "1.21.3"
 protocol = { version = "0.1.0", path = "../protocol" }
 lru = "0.16.2"
+rand_core = "0.6.4"
+obfstr = "0.4.4"
+arti = "1.8.0"
+chrono = "0.4.42"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

