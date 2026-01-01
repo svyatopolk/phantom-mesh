@@ -34,6 +34,7 @@ arti-client = { version = "0.37.0", features = ["onion-service-service", "onion-
 tor-rtcompat = { version = "0.37.0", features = ["tokio", "native-tls"] }
 tor-hsservice = "0.37.0"
 tor-cell = "0.37.0"
+sntpc = { version = "0.3.6", features = ["std", "utils"] }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

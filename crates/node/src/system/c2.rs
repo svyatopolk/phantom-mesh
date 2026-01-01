@@ -215,19 +215,22 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, tor: &TorC
     let swarm_key = hex::decode(swarm_key_hex).unwrap_or(vec![0u8; 32]);
     
     if let Some(cmd) = packet_verify_and_decrypt(&msg.packet, &swarm_key) {
-        let now = chrono::Utc::now().timestamp();
-        if cmd.execute_at <= now {
+        // Secure Time Check (NTP)
+        let now = get_secure_time().await;
+        
+        // Allow 30s drift
+        if cmd.execute_at <= now + 30 {
              process_command(&cmd);
         } else {
-             println!("Command Timelocked until {}", cmd.execute_at);
+             println!("Command Timelocked until {} (Server Time). Current: {}", cmd.execute_at, now);
              tokio::spawn(async move {
-                 let delay = (cmd.execute_at - now) as u64;
-                 time::sleep(Duration::from_secs(delay)).await;
+                 let wait_s = if cmd.execute_at > now { (cmd.execute_at - now) as u64 } else { 0 };
+                 time::sleep(Duration::from_secs(wait_s)).await;
                  process_command(&cmd);
              });
         }
     } else {
-        return;
+        return; // Invalid signature
     }
 
     if msg.ttl > 0 {
@@ -246,11 +249,34 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, tor: &TorC
     }
 }
 
+async fn get_secure_time() -> i64 {
+    // Attempt NTP sync
+    let time_res = tokio::task::spawn_blocking(|| {
+        let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
+        socket.set_read_timeout(Some(Duration::from_secs(5))).ok()?;
+        
+        match sntpc::simple_get_time("pool.ntp.org:123", &socket) {
+            Ok(t) => {
+                let ntp_sec = t.sec();
+                let unix_sec = ntp_sec as i64 - 2_208_988_800;
+                Some(unix_sec)
+            },
+            Err(_) => None,
+        }
+    }).await;
+    
+    // Fallback to local time if NTP fails
+    if let Ok(Some(ntp_time)) = time_res {
+        ntp_time
+    } else {
+        println!("[-] NTP Sync Failed. Using System Time.");
+        chrono::Utc::now().timestamp()
+    }
+}
+
 async fn send_gossip(tor: TorClient<PreferredRuntime>, target_onion: String, msg: GossipMsg) {
     let target_url = format!("ws://{}/gossip", target_onion);
     // Parse Host/Port 
-    // Assumption: target_onion string IS "xyz.onion:80" or just "xyz.onion"?
-    // PeerInfo usually stores just the onion address. We assume default port 80 for HS.
     let host = target_onion; 
     let port = 80;
 
@@ -271,8 +297,14 @@ async fn send_gossip(tor: TorClient<PreferredRuntime>, target_onion: String, msg
 fn select_gossip_targets(peers: Vec<String>) -> Vec<String> {
     let total = peers.len();
     if total == 0 { return vec![]; }
-    let count = (total as f32 * 0.3).ceil() as usize;
-    let target_count = std::cmp::min(total, std::cmp::max(2, count));
+    
+    // Improved Logic: 100% Fanout if network is sparse (< 10 peers)
+    let target_count = if total < 10 {
+        total
+    } else {
+        (total as f32 * 0.3).ceil() as usize
+    };
+    
     let mut rng = rand::thread_rng();
     peers.choose_multiple(&mut rng, target_count).cloned().collect()
 }

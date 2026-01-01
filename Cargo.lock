@@ -2566,6 +2566,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "no-std-net"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
+
+[[package]]
 name = "node"
 version = "0.2.0"
 dependencies = [
@@ -2590,6 +2596,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sntpc",
  "sysinfo 0.37.2",
  "tokio",
  "tokio-tungstenite 0.20.1",
@@ -4041,6 +4048,16 @@ name = "smallvec"
 version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+
+[[package]]
+name = "sntpc"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de6292f240a2bf33ae7156cb354802bca8ecfacf96b820a6ec2f2e9f5c01f260"
+dependencies = [
+ "chrono",
+ "no-std-net",
+]
 
 [[package]]
 name = "socket2"
