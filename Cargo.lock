@@ -507,6 +507,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot"
+version = "0.2.0"
+dependencies = [
+ "arti-client",
+ "base64 0.21.7",
+ "chacha20poly1305",
+ "chrono",
+ "clap",
+ "ed25519-dalek",
+ "futures-util",
+ "hex",
+ "hostname",
+ "lru",
+ "native-tls",
+ "num_cpus",
+ "obfstr",
+ "once_cell",
+ "protocol",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha1",
+ "sha2",
+ "sntpc",
+ "sysinfo 0.37.2",
+ "tokio",
+ "tokio-tungstenite 0.20.1",
+ "tor-cell",
+ "tor-hsservice",
+ "tor-rtcompat",
+ "url",
+ "winapi",
+ "winreg 0.52.0",
+ "x25519-dalek",
+ "zip",
+]
+
+[[package]]
 name = "bstr"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1773,29 +1813,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ghost"
-version = "0.1.0"
-dependencies = [
- "arti",
- "base64 0.22.1",
- "chrono",
- "clap",
- "ed25519-dalek",
- "futures-util",
- "hex",
- "protocol",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "tokio-tungstenite 0.28.0",
- "uuid",
- "x25519-dalek",
-]
-
-[[package]]
 name = "glob-match"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2481,6 +2498,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "master"
+version = "0.1.0"
+dependencies = [
+ "arti",
+ "base64 0.22.1",
+ "chrono",
+ "clap",
+ "ed25519-dalek",
+ "futures-util",
+ "hex",
+ "protocol",
+ "rand 0.8.5",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tokio-tungstenite 0.28.0",
+ "uuid",
+ "x25519-dalek",
+]
+
+[[package]]
 name = "matchers"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2572,46 +2612,6 @@ name = "no-std-net"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43794a0ace135be66a25d3ae77d41b91615fb68ae937f904090203e81f755b65"
-
-[[package]]
-name = "node"
-version = "0.2.0"
-dependencies = [
- "arti-client",
- "base64 0.21.7",
- "chacha20poly1305",
- "chrono",
- "clap",
- "ed25519-dalek",
- "futures-util",
- "hex",
- "hostname",
- "lru",
- "native-tls",
- "num_cpus",
- "obfstr",
- "once_cell",
- "protocol",
- "rand 0.8.5",
- "rand_core 0.6.4",
- "reqwest",
- "serde",
- "serde_json",
- "sha1",
- "sha2",
- "sntpc",
- "sysinfo 0.37.2",
- "tokio",
- "tokio-tungstenite 0.20.1",
- "tor-cell",
- "tor-hsservice",
- "tor-rtcompat",
- "url",
- "winapi",
- "winreg 0.52.0",
- "x25519-dalek",
- "zip",
-]
 
 [[package]]
 name = "nom"

