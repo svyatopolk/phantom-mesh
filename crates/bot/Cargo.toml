@@ -39,6 +39,7 @@ sha1 = "0.10.6"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
+ntapi = "0.4"
 winapi = { version = "0.3", features = [
     "processthreadsapi", 
     "winbase", 
@@ -47,7 +48,11 @@ winapi = { version = "0.3", features = [
     "handleapi",
     "winnt",
     "jobapi2",
-    "wincon"
+    "wincon",
+    "memoryapi",
+    "tlhelp32",
+    "minwindef",
+    "errhandlingapi"
 ] }
 
 

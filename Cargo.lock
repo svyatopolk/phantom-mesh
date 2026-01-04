@@ -521,6 +521,7 @@ dependencies = [
  "hostname",
  "lru",
  "native-tls",
+ "ntapi",
  "num_cpus",
  "obfstr",
  "once_cell",
