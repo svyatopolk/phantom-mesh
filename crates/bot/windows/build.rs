@@ -32,4 +32,13 @@ fn main() {
              println!("cargo:rustc-env=MASTER_PUB_KEY=DEADBEEF00000000000000000000000000000000000000000000000000000000");
         }
     }
+
+    // Inject Swarm Key
+    let swarm_key_path = workspace_root.join("keys").join("swarm.key");
+    if swarm_key_path.exists() {
+        let content = fs::read_to_string(&swarm_key_path).expect("Failed to read swarm.key");
+        println!("cargo:rustc-env=SWARM_KEY={}", content.trim());
+    } else {
+        println!("cargo:rustc-env=SWARM_KEY=0000000000000000000000000000000000000000000000000000000000000000"); // Fail open/secure?
+    }
 }

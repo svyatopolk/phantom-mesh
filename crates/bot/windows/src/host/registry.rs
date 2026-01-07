@@ -45,8 +45,8 @@ pub fn remove_from_startup() -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn is_installed() -> bool {
     let automine_dir = get_appdata_dir();
-    let miner_exe = automine_dir.join(crate::common::constants::get_miner_exe_name());
-    miner_exe.exists()
+    let bot_bin = automine_dir.join(crate::common::constants::get_bot_binary_name());
+    bot_bin.exists()
 }
 
 #[cfg(windows)]

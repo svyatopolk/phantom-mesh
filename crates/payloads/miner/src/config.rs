@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use crate::common::polymorph::MorphConfig;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Pool {
     pub url: String,
     pub user: String,
@@ -10,7 +9,7 @@ pub struct Pool {
     pub nicehash: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CpuConfig {
     pub enabled: bool,
     #[serde(rename = "huge-pages")]
@@ -24,7 +23,7 @@ pub struct CpuConfig {
     pub rx: Vec<i32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RandomXConfig {
     pub init: i32,
     pub mode: String,
@@ -34,7 +33,7 @@ pub struct RandomXConfig {
     pub wrmsr: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MinerConfig {
     pub autosave: bool,
     pub background: bool,
@@ -51,7 +50,6 @@ pub struct MinerConfig {
     pub pools: Vec<Pool>,
     pub cpu: CpuConfig,
     pub randomx: RandomXConfig,
-    pub morph: MorphConfig,
 }
 
 impl MinerConfig {
@@ -88,7 +86,6 @@ impl MinerConfig {
                 rdmsr: true,
                 wrmsr: true,
             },
-            morph: MorphConfig::generate(),
         }
     }
 }

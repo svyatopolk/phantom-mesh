@@ -1,3 +1,3 @@
-// pub mod miner;
-pub mod ddos;
-pub mod ransomware;
+pub mod loader;
+// pub mod ddos;
+// pub mod ransomware;
