@@ -3962,38 +3962,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e91099d4268b0e11973f036e885d652fb0b21fedcf69738c627f94db6a44f42"
 
 [[package]]
-name = "payload_ddos"
-version = "0.1.0"
-dependencies = [
- "rand 0.8.5",
- "reqwest",
- "tokio",
-]
-
-[[package]]
-name = "payload_miner"
-version = "0.1.0"
-dependencies = [
- "rand 0.8.5",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "zip",
-]
-
-[[package]]
-name = "payload_ransomware"
-version = "0.1.0"
-dependencies = [
- "chacha20poly1305",
- "rand 0.8.5",
- "rayon",
- "tokio",
- "walkdir",
-]
-
-[[package]]
 name = "pbkdf2"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

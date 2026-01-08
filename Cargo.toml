@@ -6,10 +6,7 @@ members = [
     "crates/bootstrap",
     "crates/master",
     "crates/protocol",
-    "test_feature",
-    "crates/payloads/miner",
-    "crates/payloads/ransomware",
-    "crates/payloads/ddos"
+    "test_feature"
 ]
 
 [profile.release]
