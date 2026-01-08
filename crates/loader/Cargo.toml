@@ -1,0 +1,25 @@
+[package]
+name = "loader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+ipnet = "2.9"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+clap = { version = "4.4", features = ["derive"] }
+colored = "2.0"
+stun = "0.5"
+local-ip-address = "0.5"
+# Actually, for async tokio, "tokio-telnet" or just manual TCP is better.
+# Mirai scanner is raw TCP usually.
+# Let's use `mini-telnet` or just `tokio` for raw TCP.
+# I will use `mini-telnet` if available, otherwise `telnet`.
+# Let's try `colored` for nice output.
+
+# Internal
+protocol = { path = "../protocol" }

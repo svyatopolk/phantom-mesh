@@ -1,17 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/bot/windows",
-    "crates/bot/linux",
-    "crates/bootstrap",
-    "crates/master",
+    "crates/nodes/edge",   # prev bot/windows
+    "crates/nodes/mesh",   # prev bot/linux
+    "crates/nodes/master",
+    "crates/nodes/mesh",
+    "crates/nodes/edge",
+    "crates/loader",
+    "crates/plugins/propagator",
     "crates/protocol",
-    "test_feature"
 ]
 
 [profile.release]
-strip = true       # Strip symbols
-lto = true         # Link Time Optimization (Cross-Crate Inlining)
-codegen-units = 1  # Standardize codegen for max optimization
-panic = "abort"    # Remove unwind strings/overhead
-opt-level = "z"    # Optimize for Size (often harder to analyze than '3')
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
