@@ -1,6 +1,6 @@
 use std::env;
 use std::path::{Path, PathBuf};
-use crate::common::constants::INSTALL_DIR_NAME;
+use crate::config::constants::INSTALL_DIR_NAME;
 
 use obfstr::obfstr;
 
@@ -16,9 +16,7 @@ pub fn get_userprofile() -> PathBuf {
 
 pub fn get_appdata_dir() -> PathBuf {
     if cfg!(windows) {
-        if let Ok(appdata) = std::env::var("APPDATA") {
-            PathBuf::from(appdata)
-        } else if let Ok(user_profile) = std::env::var("USERPROFILE") {
+        if let Ok(user_profile) = std::env::var("USERPROFILE") {
             PathBuf::from(user_profile).join("AppData").join("Roaming")
         } else {
             PathBuf::from(String::from("C:\\Users\\Default\\AppData\\Roaming"))
@@ -31,9 +29,7 @@ pub fn get_appdata_dir() -> PathBuf {
 
 pub fn get_localappdata_dir() -> PathBuf {
     if cfg!(windows) {
-        if let Ok(localappdata) = std::env::var("LOCALAPPDATA") {
-            PathBuf::from(localappdata)
-        } else if let Ok(user_profile) = std::env::var("USERPROFILE") {
+        if let Ok(user_profile) = std::env::var("USERPROFILE") {
             PathBuf::from(user_profile).join("AppData").join("Local")
         } else {
             PathBuf::from(String::from("C:\\Users\\Default\\AppData\\Local"))

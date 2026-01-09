@@ -1,7 +1,7 @@
 
 use std::path::Path;
 
-use crate::utils::paths::get_appdata_dir;
+use crate::helpers::paths::get_appdata_dir;
 
 #[cfg(windows)]
 use winreg::enums::*;
@@ -45,7 +45,7 @@ pub fn remove_from_startup() -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn is_installed() -> bool {
     let automine_dir = get_appdata_dir();
-    let bot_bin = automine_dir.join(crate::common::constants::get_bot_binary_name());
+    let bot_bin = automine_dir.join(crate::config::constants::get_bot_binary_name());
     bot_bin.exists()
 }
 

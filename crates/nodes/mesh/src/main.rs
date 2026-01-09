@@ -1,6 +1,6 @@
-mod common;
+mod config;
 use obfstr::obfstr;
-mod utils;
+mod helpers;
 mod p2p;
 mod host;
 mod security;

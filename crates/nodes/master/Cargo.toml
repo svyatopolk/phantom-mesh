@@ -30,7 +30,7 @@ sha1 = "0.10"
 mainline = "1.0"
 
 # Internal
-protocol = { path = "../../protocol" }
+protocol = { path = "../../core/protocol" }
 
 # Tor
 tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }

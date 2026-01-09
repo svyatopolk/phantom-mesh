@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use crate::common::constants::{get_bot_binary_name, get_persistence_script_name, get_launcher_script_name, CONFIG_FILENAME};
+use crate::config::constants::{get_bot_binary_name, get_persistence_script_name, get_launcher_script_name, CONFIG_FILENAME};
 
 #[cfg(windows)]
 use std::process::Command;

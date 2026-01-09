@@ -1,7 +1,6 @@
-mod commands;
-mod common;
+mod config;
 use obfstr::obfstr;
-mod utils;
+mod helpers;
 mod p2p;
 mod host;
 mod security;
@@ -10,7 +9,7 @@ mod discovery;
 
 use clap::{Parser, Subcommand};
 
-use commands::{install, start, status, uninstall};
+use p2p::commands::{install, start, status, uninstall};
 use host::process::hide_console;
 // use modules::miner::stop_mining;
 use host::registry::is_installed;

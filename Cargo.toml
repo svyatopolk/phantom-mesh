@@ -1,14 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/nodes/edge",   # prev bot/windows
-    "crates/nodes/mesh",   # prev bot/linux
-    "crates/nodes/master",
+    # Core infrastructure
+    "crates/core/protocol",
+    
+    # Node applications
     "crates/nodes/mesh",
     "crates/nodes/edge",
-    "crates/loader",
+    "crates/nodes/master",
+    
+    # Standalone tools
+    "crates/tools/loader",
+    
+    # Plugins
     "crates/plugins/propagator",
-    "crates/protocol",
 ]
 
 [profile.release]
