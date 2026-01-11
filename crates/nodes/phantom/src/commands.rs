@@ -4,6 +4,11 @@ use crate::network::GhostClient;
 
 
 pub async fn handle_keygen(output: PathBuf) {
+    if let Some(parent) = output.parent() {
+        if !parent.exists() {
+             let _ = std::fs::create_dir_all(parent);
+        }
+    }
     let pub_key = crypto::generate_key(&output);
     println!("Generated Key at: {}", output.display());
     println!("Public Key: {}", pub_key);

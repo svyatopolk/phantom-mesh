@@ -16,9 +16,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Generate Ghost Identity
+    /// Generate a new Ed25519 Keypair
     Keygen {
-        #[arg(short, long, default_value = "ghost.key")]
+        #[arg(short, long, default_value = "keys/ghost.key")]
         output: PathBuf,
     },
     /// List active bots from Bootstrap Registry
