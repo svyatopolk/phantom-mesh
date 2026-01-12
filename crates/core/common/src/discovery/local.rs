@@ -46,10 +46,10 @@ impl LocalDiscovery {
                     
                     if let Some(peer) = parse_packet(data, addr) {
                         if peer.peer_id == my_peer_id {
-                            // println!("[Local Debug] Ignoring self-announce.");
                             continue; // Self-discovery
                         }
-                        println!("[Local] Received announce from LAN peer: {} @ {}", peer.peer_id, peer.addr);
+                        // Debug: confirm packet parsing works
+                        println!("[Local Debug] RX peer: {} @ {}", peer.peer_id, peer.addr);
                         let _ = tx.send(peer).await;
                     }
                 }

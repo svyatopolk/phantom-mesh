@@ -50,7 +50,7 @@ impl WebRtcManager {
     }
 
     pub async fn initiate_connection(&self, peer_ip: &str, node_id: &str, my_node_id: &str) -> Result<(Arc<RTCPeerConnection>, String), Box<dyn std::error::Error + Send + Sync>> {
-        let pc = self.create_pc_internal().await?;
+        let pc = self.create_pc_internal(node_id.to_string()).await?;
         
         // Data Channel for Initiator
         let dc = pc.create_data_channel("phantom-data", Some(Self::phantom_channel_config()))
@@ -74,7 +74,7 @@ impl WebRtcManager {
     }
 
     pub async fn accept_connection(&self, offer_sdp: &str, peer_ip: &str, node_id: &str, my_node_id: &str) -> Result<(Arc<RTCPeerConnection>, String), Box<dyn std::error::Error + Send + Sync>> {
-        let pc = self.create_pc_internal().await?;
+        let pc = self.create_pc_internal(node_id.to_string()).await?;
         
         // Passive: Wait for Data Channel
         let conns_clone = self.connections.clone();
@@ -151,7 +151,7 @@ impl WebRtcManager {
         }));
     }
 
-    async fn create_pc_internal(&self) -> Result<Arc<RTCPeerConnection>, Box<dyn std::error::Error + Send + Sync>> {
+    async fn create_pc_internal(&self, peer_alias: String) -> Result<Arc<RTCPeerConnection>, Box<dyn std::error::Error + Send + Sync>> {
          let ice_servers = vec![
             RTCIceServer {
                 urls: vec![
@@ -177,14 +177,24 @@ impl WebRtcManager {
         let pc = api.new_peer_connection(config).await?;
         
         // ICE State Change Logging
-        pc.on_ice_connection_state_change(Box::new(|state: webrtc::ice_transport::ice_connection_state::RTCIceConnectionState| {
-            println!("[ICE] Connection State Changed: {:?}", state);
+        let peer_alias_clone = peer_alias.clone();
+        pc.on_ice_connection_state_change(Box::new(move |state: webrtc::ice_transport::ice_connection_state::RTCIceConnectionState| {
+            println!("[ICE] Connection State Changed: {}", state);
+            if state == webrtc::ice_transport::ice_connection_state::RTCIceConnectionState::Connected {
+                let s = "CONNECTED";
+                println!("+-------------------------------------------------------------+");
+                println!("| [WebRTC] PEER CONNECTED SUCCESSFULLY                        |");
+                println!("| PeerID:  {:<50} |", peer_alias_clone);
+                println!("| Status:  {:<50} |", s);
+                println!("+-------------------------------------------------------------+");
+            }
             Box::pin(async {})
         }));
         
         // Peer Connection State Logging
-        pc.on_peer_connection_state_change(Box::new(|state: RTCPeerConnectionState| {
-            println!("[WebRTC] Peer Connection State: {:?}", state);
+        let peer_alias_clone2 = peer_alias.clone();
+        pc.on_peer_connection_state_change(Box::new(move |state: RTCPeerConnectionState| {
+            println!("[WebRTC] Peer Connection State for {}: {:?}", peer_alias_clone2, state);
             Box::pin(async {})
         }));
         
